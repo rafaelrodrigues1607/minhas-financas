@@ -510,12 +510,14 @@ function Modal({
       padding: 16
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: 'modal-card',
     style: {
       ...s.card,
       width: '100%',
       maxWidth: 460,
       maxHeight: '90vh',
-      overflowY: 'auto'
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -962,6 +964,7 @@ function Transactions({
     }
   }, [['RECEITAS', income, T.green], ['DESPESAS', expense, T.red], ['SALDO', income - expense, income - expense >= 0 ? T.green : T.red]].map(([l, v, c]) => /*#__PURE__*/React.createElement("div", {
     key: l,
+    className: 'txsc',
     style: {
       ...s.card,
       textAlign: 'center'
@@ -973,6 +976,7 @@ function Transactions({
       marginBottom: 4
     }
   }, l), /*#__PURE__*/React.createElement("div", {
+    className: 'txsv',
     style: {
       ...s.mono,
       color: c,
@@ -1154,6 +1158,7 @@ function Transactions({
       description: e.target.value
     })
   })), /*#__PURE__*/React.createElement("div", {
+    className: 'fmg',
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -1196,6 +1201,7 @@ function Transactions({
     key: c.id,
     value: c.id
   }, c.icon, " ", c.name)))), /*#__PURE__*/React.createElement("div", {
+    className: 'fmg',
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -2279,8 +2285,15 @@ function App() {
   return /*#__PURE__*/React.createElement("div", {
     style: s.page
   }, /*#__PURE__*/React.createElement("style", null, `*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+        html,body{overflow-x:hidden}
         ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:${T.border}; border-radius:3px; }
-        select option { background:${T.surface2}; color:${T.text}; }`), /*#__PURE__*/React.createElement(Sidebar, {
+        select option { background:${T.surface2}; color:${T.text}; }
+        @media(max-width:599px){
+          .txsc{padding:10px 6px!important}
+          .txsv{font-size:12px!important}
+          .fmg{grid-template-columns:1fr!important}
+          .modal-card{padding:14px!important}
+        }`), /*#__PURE__*/React.createElement(Sidebar, {
     active: active,
     setActive: setActive,
     onLogout: logout,
