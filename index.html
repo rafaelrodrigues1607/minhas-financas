@@ -334,7 +334,7 @@ const NAV = [{
 }, {
   id: 'investments',
   icon: '📈',
-  label: 'Aplicações'
+  label: 'Investimentos'
 }, {
   id: 'goals',
   icon: '🎯',
@@ -1339,10 +1339,10 @@ function Investments({
       fontWeight: 700,
       color: '#fff'
     }
-  }, "Aplicações"), /*#__PURE__*/React.createElement("button", {
+  }, "Investimentos"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowModal(true),
     style: s.btnP
-  }, "+ Nova aplicação")), /*#__PURE__*/React.createElement("div", {
+  }, "+ Novo investimento")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))',
@@ -1376,7 +1376,7 @@ function Investments({
       padding: 28,
       fontSize: 13
     }
-  }, "Nenhuma aplicação cadastrada.") : list.map(inv => {
+  }, "Nenhum investimento cadastrado.") : list.map(inv => {
     const r = inv.initial_amount > 0 ? (((inv.current_amount || inv.initial_amount) - inv.initial_amount) / inv.initial_amount * 100).toFixed(2) : 0;
     const prog = inv.target_amount ? Math.min((inv.current_amount || inv.initial_amount) / inv.target_amount * 100, 100).toFixed(0) : null;
     return /*#__PURE__*/React.createElement("div", {
@@ -1469,7 +1469,7 @@ function Investments({
       }
     }))));
   })), showModal && /*#__PURE__*/React.createElement(Modal, {
-    title: "Nova Aplicação",
+    title: "Novo Investimento",
     onClose: () => setShowModal(false)
   }, /*#__PURE__*/React.createElement("div", {
     style: {
