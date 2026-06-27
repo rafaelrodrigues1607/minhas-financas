@@ -818,6 +818,7 @@ function Transactions({
     transaction_date: ''
   };
   const [form, setForm] = useState(emptyForm);
+  const [editId, setEditId] = useState(null);
   const getOrCreatePeriod = async () => {
     let {
       data: p
@@ -862,11 +863,7 @@ function Transactions({
   }, [load]);
   const save = async () => {
     if (!form.description) return;
-    const period_id = await getOrCreatePeriod();
-    if (!period_id) return;
-    await supabase.from('transactions').insert({
-      user_id: user.id,
-      period_id,
+    const payload = {
       description: form.description,
       amount_planned: parseFloat(form.amount_planned) || 0,
       amount_actual: form.amount_actual ? parseFloat(form.amount_actual) : null,
@@ -875,10 +872,32 @@ function Transactions({
       payment_method: form.payment_method,
       status: form.status,
       transaction_date: form.transaction_date || null
-    });
+    };
+    if (editId) {
+      await supabase.from('transactions').update(payload).eq('id', editId);
+    } else {
+      const period_id = await getOrCreatePeriod();
+      if (!period_id) return;
+      await supabase.from('transactions').insert({ user_id: user.id, period_id, ...payload });
+    }
     setShowModal(false);
+    setEditId(null);
     setForm(emptyForm);
     load();
+  };
+  const startEdit = tx => {
+    setForm({
+      description: tx.description || '',
+      amount_planned: tx.amount_planned || '',
+      amount_actual: tx.amount_actual || '',
+      type: tx.type || 'expense',
+      category_id: tx.category_id || '',
+      payment_method: tx.payment_method || 'credit_card',
+      status: tx.status || 'pending',
+      transaction_date: tx.transaction_date || ''
+    });
+    setEditId(tx.id);
+    setShowModal(true);
   };
   const remove = async id => {
     await supabase.from('transactions').delete().eq('id', id);
@@ -1074,6 +1093,17 @@ function Transactions({
         border: 'none'
       }
     }, "✓"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => startEdit(tx),
+      title: "Editar",
+      style: {
+        color: T.muted2,
+        fontSize: 15,
+        cursor: 'pointer',
+        background: 'none',
+        border: 'none',
+        padding: '0 2px'
+      }
+    }, "✏"), /*#__PURE__*/React.createElement("button", {
       onClick: () => remove(tx.id),
       style: {
         color: T.red,
@@ -1084,8 +1114,8 @@ function Transactions({
       }
     }, "×")));
   })), showModal && /*#__PURE__*/React.createElement(Modal, {
-    title: "Nova Transação",
-    onClose: () => setShowModal(false)
+    title: editId ? "Editar Transação" : "Nova Transação",
+    onClose: () => { setShowModal(false); setEditId(null); setForm(emptyForm); }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
