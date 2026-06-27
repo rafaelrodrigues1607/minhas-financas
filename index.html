@@ -185,9 +185,20 @@ function AuthScreen({
         }));
       }
       if (error) throw error;
+      if (tab === 'register') {
+        if (data?.user && !data?.session) {
+          setErr('✅ Conta criada! Verifique seu e-mail para confirmar e depois faça login.');
+          setLoading(false);
+          return;
+        }
+      }
       if (data?.user) onAuth(data.user);
     } catch (e) {
-      setErr(e.message);
+      var msg = e?.message || e?.error_description || e?.msg;
+      if (!msg || msg === '{}' || msg === 'undefined') {
+        msg = 'Erro ao conectar. Verifique sua conexão e tente novamente.';
+      }
+      setErr(msg);
     }
     setLoading(false);
   };
