@@ -5,20 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FinançasPro 💰</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>"/>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0f1117; color: #e2e8f0; font-family: system-ui, sans-serif; }
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: #272d42; border-radius: 3px; }
     select option { background: #1e2335; color: #e2e8f0; }
+    #boot-msg { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; background:#0f1117; color:#64748b; font-size:14px; z-index:9999; }
+    #boot-msg.hidden { display:none; }
   </style>
 </head>
 <body>
+  <div id="boot-msg">
+    <div style="font-size:36px;margin-bottom:12px">💰</div>
+    <div>Carregando FinançasPro...</div>
+  </div>
   <div id="root"></div>
   <script>
+window.addEventListener('error', function(e) {
+  var msg = document.getElementById('boot-msg');
+  if (msg) {
+    msg.classList.remove('hidden');
+    msg.innerHTML = '<div style="padding:24px;color:#f87171;text-align:center;max-width:320px">' +
+      '<div style="font-size:28px;margin-bottom:12px">⚠️</div>' +
+      '<b>Erro ao carregar</b><br><br>' +
+      '<span style="font-size:12px;color:#94a3b8">' + (e.message || 'Erro desconhecido') + '</span>' +
+      '</div>';
+  }
+});
+</script>
+  <script>
+(function() {
+if (!window.React || !window.ReactDOM) {
+  document.getElementById('boot-msg').innerHTML =
+    '<div style="padding:24px;color:#f87171;text-align:center"><div style="font-size:28px;margin-bottom:12px">⚠️</div><b>Erro: React não carregou.</b><br><span style="font-size:12px;color:#94a3b8">Verifique sua conexão e recarregue.</span></div>';
+  return;
+}
+if (!window.supabase) {
+  document.getElementById('boot-msg').innerHTML =
+    '<div style="padding:24px;color:#f87171;text-align:center"><div style="font-size:28px;margin-bottom:12px">⚠️</div><b>Erro: Supabase não carregou.</b><br><span style="font-size:12px;color:#94a3b8">Verifique sua conexão e recarregue.</span></div>';
+  return;
+}
+
 const {
   useState,
   useEffect,
@@ -26,7 +58,7 @@ const {
 } = React;
 
 // Supabase client
-const supabase = window.supabase.createClient('https://hasdsnvlhoqoekyfbhkk.supabase.co', 'sb_publishable_oEJQTqNsXOQkWZo7STJp6w_Dl2dZuzI');
+const supabase = window.supabase.createClient('https://hasdsnvlhoqoekyfbhkk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhc2RzbnZsaG9xb2VreWZiaGtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzAzNTgsImV4cCI6MjA5Nzg0NjM1OH0.nT_weQjeGhHInwTlPw8W2IXmZUE2yECB71o-pI-RfvM');
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const fmt = v => new Intl.NumberFormat('pt-BR', {
@@ -2187,8 +2219,11 @@ function App() {
     user: user
   })));
 }
+var bootMsg = document.getElementById('boot-msg');
+if (bootMsg) bootMsg.classList.add('hidden');
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
 
+})();
   </script>
 </body>
 </html>
