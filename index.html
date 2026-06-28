@@ -66,10 +66,14 @@ const {
   useCallback
 } = React;
 
+// Detecção de plataforma nativa (Capacitor)
+const _IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const _API_BASE = _IS_NATIVE ? 'https://minhas-financas-wine-sigma.vercel.app' : '';
+
 // Supabase client
 let supabase;
 try {
-  const _cfg = await fetch('/api/config').then(r => { if (!r.ok) throw 0; return r.json(); });
+  const _cfg = await fetch(_API_BASE + '/api/config').then(r => { if (!r.ok) throw 0; return r.json(); });
   supabase = window.supabase.createClient(_cfg.url, _cfg.key);
   if (_cfg.sentryDsn && window.Sentry) {
     window.Sentry.init({ dsn: _cfg.sentryDsn, environment: 'production', tracesSampleRate: 0.1 });
