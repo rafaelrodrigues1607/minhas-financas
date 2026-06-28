@@ -814,6 +814,9 @@ function Transactions({
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [detailTx, setDetailTx] = useState(null);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [copyForm, setCopyForm] = useState({ srcMonth: month === 1 ? 12 : month - 1, srcYear: month === 1 ? year - 1 : year, types: ['income', 'expense', 'investment'] });
+  const [copying, setCopying] = useState(false);
   const getOrCreatePeriod = async () => {
     let {
       data: p
@@ -905,6 +908,32 @@ function Transactions({
     }).eq('id', tx.id);
     load();
   };
+  const copyFromMonth = async () => {
+    if (!copyForm.types.length) return;
+    setCopying(true);
+    const { data: srcPeriod } = await supabase.from('monthly_periods').select('id').eq('user_id', user.id).eq('year', copyForm.srcYear).eq('month', copyForm.srcMonth).single();
+    if (!srcPeriod) { alert('Nenhuma transação encontrada no mês de origem.'); setCopying(false); return; }
+    let q = supabase.from('transactions').select('*').eq('user_id', user.id).eq('period_id', srcPeriod.id);
+    if (copyForm.types.length < 3) q = q.in('type', copyForm.types);
+    const { data: srcTx } = await q;
+    if (!srcTx || !srcTx.length) { alert('Nenhuma transação encontrada no mês de origem.'); setCopying(false); return; }
+    const destPeriodId = await getOrCreatePeriod();
+    if (!destPeriodId) { setCopying(false); return; }
+    const lastDay = new Date(year, month, 0).getDate();
+    const inserts = srcTx.map(tx => {
+      let newDate = null;
+      if (tx.transaction_date) {
+        const d = new Date(tx.transaction_date + 'T12:00:00');
+        const day = Math.min(d.getDate(), lastDay);
+        newDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      }
+      return { user_id: user.id, period_id: destPeriodId, description: tx.description, amount_planned: tx.amount_planned, amount_actual: null, type: tx.type, category_id: tx.category_id || null, payment_method: tx.payment_method, status: 'pending', transaction_date: newDate, notes: tx.notes || null, card_name: tx.card_name || null };
+    });
+    await supabase.from('transactions').insert(inserts);
+    setCopying(false);
+    setShowCopyModal(false);
+    load();
+  };
   const income = list.filter(t => t.type === 'income').reduce((a, t) => a + (t.amount_actual || t.amount_planned), 0);
   const expense = list.filter(t => t.type === 'expense').reduce((a, t) => a + (t.amount_actual || t.amount_planned), 0);
   return /*#__PURE__*/React.createElement("div", {
@@ -956,7 +985,10 @@ function Transactions({
   }, y))), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowModal(true),
     style: s.btnP
-  }, "+ Lançar"))), /*#__PURE__*/React.createElement("div", {
+  }, "+ Lançar"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowCopyModal(true),
+    style: s.btnS
+  }, "📋 Copiar mês"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(3,1fr)',
@@ -1254,7 +1286,53 @@ function Transactions({
   }, "Cancelar"), /*#__PURE__*/React.createElement("button", {
     onClick: save,
     style: s.btnP
-  }, "Salvar")))), detailTx && function() {
+  }, "Salvar")))), showCopyModal && /*#__PURE__*/React.createElement(Modal, {
+    title: "Copiar transações para este mês",
+    onClose: () => setShowCopyModal(false)
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { display: 'flex', flexDirection: 'column', gap: 16 }
+  }, /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("label", { style: s.label }, "Copiar de"),
+    /*#__PURE__*/React.createElement("div", {
+      className: 'fmg',
+      style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
+    },
+      /*#__PURE__*/React.createElement("select", {
+        style: s.input,
+        value: copyForm.srcMonth,
+        onChange: e => setCopyForm({ ...copyForm, srcMonth: +e.target.value })
+      }, MONTHS.map((m, i) => /*#__PURE__*/React.createElement("option", { key: i, value: i + 1 }, m))),
+      /*#__PURE__*/React.createElement("select", {
+        style: s.input,
+        value: copyForm.srcYear,
+        onChange: e => setCopyForm({ ...copyForm, srcYear: +e.target.value })
+      }, [2024, 2025, 2026, 2027].map(y => /*#__PURE__*/React.createElement("option", { key: y, value: y }, y)))
+    )
+  ), /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("label", { style: s.label }, "Para"),
+    /*#__PURE__*/React.createElement("div", { style: { ...s.input, color: T.muted2 } }, MONTHS[month - 1], " ", year)
+  ), /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("label", { style: s.label }, "Tipos"),
+    /*#__PURE__*/React.createElement("div", { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+      [['income', 'Receitas', T.green], ['expense', 'Despesas', T.red], ['investment', 'Investimentos', T.blue]].map(([v, l, c]) => {
+        const checked = copyForm.types.includes(v);
+        return /*#__PURE__*/React.createElement("button", {
+          key: v,
+          onClick: () => setCopyForm({ ...copyForm, types: checked ? copyForm.types.filter(t => t !== v) : [...copyForm.types, v] }),
+          style: { padding: '7px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: checked ? c + '22' : T.surface2, color: checked ? c : T.muted2, border: `1px solid ${checked ? c + '44' : T.border}` }
+        }, l);
+      })
+    )
+  ), /*#__PURE__*/React.createElement("div", {
+    style: { display: 'flex', gap: 8, justifyContent: 'flex-end' }
+  },
+    /*#__PURE__*/React.createElement("button", { onClick: () => setShowCopyModal(false), style: s.btnS }, "Cancelar"),
+    /*#__PURE__*/React.createElement("button", {
+      onClick: copyFromMonth,
+      disabled: copying || !copyForm.types.length,
+      style: { ...s.btnP, opacity: copying || !copyForm.types.length ? 0.6 : 1 }
+    }, copying ? "Copiando..." : "Copiar")
+  ))), detailTx && function() {
     const dc = cats.find(c => c.id === detailTx.category_id);
     const PAY = { credit_card: 'Cartão de Crédito', debit_card: 'Cartão de Débito', pix: 'Pix', cash: 'Dinheiro', bank_transfer: 'TED/DOC', other: 'Outro' };
     const TYPE = { income: 'Receita', expense: 'Despesa', investment: 'Investimento' };
