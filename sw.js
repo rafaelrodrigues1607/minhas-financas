@@ -1,7 +1,9 @@
-const CACHE = 'financas-v1';
+const CACHE = 'financas-v2';
 const ASSETS = [
   '/',
   '/index.html',
+  '/icons/icon.png',
+  '/icons/icon-192.png',
   'https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js',
   'https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'

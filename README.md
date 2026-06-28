@@ -62,13 +62,15 @@ Aplicativo de controle de finanças pessoais, disponível como **PWA** (Progress
 
 ```
 minhas-financas/
-├── index.html        # Aplicação completa (React SPA ~2300 linhas)
-├── manifest.json     # Configuração PWA
-├── sw.js             # Service Worker (cache offline)
-├── icon.png          # Ícone 512×512 (PWA + favicon)
-├── icon-192.png      # Ícone 192×192 (manifest)
-├── icon.svg          # Ícone SVG legado
-├── vercel.json       # Configuração de deploy
+├── icons/
+│   ├── icon.png          # Ícone 512×512 (PWA + favicon)
+│   ├── icon-192.png      # Ícone 192×192 (manifest)
+│   ├── icon.svg          # Ícone SVG legado
+│   └── icon-maskable.svg # Ícone maskable SVG legado
+├── index.html            # Aplicação completa (React SPA ~2300 linhas)
+├── manifest.json         # Configuração PWA (deve ficar na raiz)
+├── sw.js                 # Service Worker (deve ficar na raiz)
+├── vercel.json           # Configuração de deploy
 └── README.md
 ```
 
