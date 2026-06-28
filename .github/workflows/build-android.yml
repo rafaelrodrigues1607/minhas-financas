@@ -36,6 +36,26 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Setup Firebase (google-services.json)
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          else
+            cp android-config/google-services.json android/app/google-services.json
+          fi
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+      - name: Set app icons
+        run: |
+          declare -A sizes=(["mdpi"]=48 ["hdpi"]=72 ["xhdpi"]=96 ["xxhdpi"]=144 ["xxxhdpi"]=192)
+          for density in "${!sizes[@]}"; do
+            size="${sizes[$density]}"
+            dir="android/app/src/main/res/mipmap-${density}"
+            convert icons/icon.png -resize "${size}x${size}" "${dir}/ic_launcher.png"
+            convert icons/icon.png -resize "${size}x${size}" -gravity center -background "#3ecf8e" -extent "${size}x${size}" "${dir}/ic_launcher_round.png"
+          done
+
       - name: Sync web assets
         run: npx cap sync android
 

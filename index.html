@@ -73,7 +73,15 @@ const _API_BASE = _IS_NATIVE ? 'https://minhas-financas-wine-sigma.vercel.app' :
 // Supabase client
 let supabase;
 try {
-  const _cfg = await fetch(_API_BASE + '/api/config').then(r => { if (!r.ok) throw 0; return r.json(); });
+  let _cfg;
+  try {
+    _cfg = await fetch(_API_BASE + '/api/config').then(r => { if (!r.ok) throw 0; return r.json(); });
+    localStorage.setItem('_cfg_cache', JSON.stringify(_cfg));
+  } catch (_fe) {
+    const _cached = localStorage.getItem('_cfg_cache');
+    if (!_cached) throw _fe;
+    _cfg = JSON.parse(_cached);
+  }
   supabase = window.supabase.createClient(_cfg.url, _cfg.key);
   if (_cfg.sentryDsn && window.Sentry) {
     window.Sentry.init({ dsn: _cfg.sentryDsn, environment: 'production', tracesSampleRate: 0.1 });
@@ -82,6 +90,15 @@ try {
   var bm = document.getElementById('boot-msg');
   if (bm) bm.innerHTML = '<div style="padding:24px;color:#f87171;text-align:center"><div style="font-size:28px;margin-bottom:12px">⚠️</div><b>Erro ao carregar configuração</b><br><span style="font-size:12px;color:#94a3b8">Verifique sua conexão e recarregue a página.</span></div>';
   return;
+}
+
+// Push notifications (native only — requires @capacitor/push-notifications + Firebase)
+if (_IS_NATIVE && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
+  const PN = window.Capacitor.Plugins.PushNotifications;
+  PN.requestPermissions().then(r => { if (r.receive === 'granted') PN.register(); }).catch(() => {});
+  PN.addListener('registration', t => { localStorage.setItem('fcm_token', t.value); }).catch(() => {});
+  PN.addListener('pushNotificationReceived', n => { console.log('[Push]', n.title); }).catch(() => {});
+  PN.addListener('pushNotificationActionPerformed', a => { console.log('[Push action]', a.actionId); }).catch(() => {});
 }
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
@@ -491,6 +508,30 @@ function Sidebar({
       justifyContent: collapsed ? 'center' : 'flex-start'
     }
   }, /*#__PURE__*/React.createElement("span", null, "🚪"), !collapsed && 'Sair')));
+}
+
+// ─── Bottom Tab Bar (native only) ────────────────────────────────────────────
+function BottomTabBar({ active, setActive }) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: T.surface, borderTop: `1px solid ${T.border}`,
+      display: 'flex', alignItems: 'stretch', zIndex: 200,
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+    }
+  }, NAV.map(n => /*#__PURE__*/React.createElement("button", {
+    key: n.id,
+    onClick: () => setActive(n.id),
+    style: {
+      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '6px 0', gap: 2,
+      border: 'none', cursor: 'pointer', background: 'transparent',
+      color: active === n.id ? T.green : T.muted, fontFamily: 'inherit', minWidth: 0
+    }
+  },
+    /*#__PURE__*/React.createElement("span", { style: { fontSize: 20, lineHeight: 1 } }, n.icon),
+    /*#__PURE__*/React.createElement("span", { style: { fontSize: 9, fontWeight: active === n.id ? 700 : 400, marginTop: 2 } }, n.label)
+  )));
 }
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
@@ -2453,7 +2494,10 @@ function Reports({
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 function Settings({
-  user
+  user,
+  onLogout,
+  theme: settingsTheme,
+  onToggleTheme: settingsToggleTheme
 }) {
   const [form, setForm] = useState({
     full_name: '',
@@ -2601,7 +2645,15 @@ function Settings({
       ...s.btnP,
       alignSelf: 'flex-start'
     }
-  }, saved ? '✓ Salvo!' : 'Salvar configurações'));
+  }, saved ? '✓ Salvo!' : 'Salvar configurações'),
+  _IS_NATIVE && settingsToggleTheme && /*#__PURE__*/React.createElement("button", {
+    onClick: settingsToggleTheme,
+    style: { ...s.btnS, alignSelf: 'flex-start' }
+  }, settingsTheme === 'dark' ? '☀️ Modo claro' : '🌙 Modo escuro'),
+  _IS_NATIVE && onLogout && /*#__PURE__*/React.createElement("button", {
+    onClick: onLogout,
+    style: { ...s.btnS, alignSelf: 'flex-start', color: T.red, borderColor: T.red + '44' }
+  }, '🚪 Sair da conta'));
 }
 
 // ─── App root ─────────────────────────────────────────────────────────────────
@@ -2701,7 +2753,7 @@ function App() {
       )
     ));
   }
-  const sideW = collapsed ? 56 : 210;
+  const sideW = _IS_NATIVE ? 0 : (collapsed ? 56 : 210);
   const screens = {
     dashboard: Dashboard,
     transactions: Transactions,
@@ -2721,25 +2773,34 @@ function App() {
           .txsv{font-size:12px!important}
           .fmg{grid-template-columns:1fr!important}
           .modal-card{padding:14px!important}
-        }`), /*#__PURE__*/React.createElement(Sidebar, {
-    active: active,
-    setActive: setActive,
-    onLogout: logout,
-    collapsed: collapsed,
-    setCollapsed: setCollapsed,
-    theme: theme,
-    onToggleTheme: toggleTheme
-  }), /*#__PURE__*/React.createElement("main", {
-    style: {
-      marginLeft: sideW,
-      padding: '24px 22px',
-      minHeight: '100vh',
-      transition: 'margin-left .2s'
-    }
-  }, Object.entries(screens).map(([id, Comp]) => !mounted[id] ? null : /*#__PURE__*/React.createElement("div", {
-    key: id,
-    style: { display: active === id ? 'block' : 'none' }
-  }, /*#__PURE__*/React.createElement(Comp, { user: user })))));
+        }`),
+    !_IS_NATIVE && /*#__PURE__*/React.createElement(Sidebar, {
+      active: active,
+      setActive: setActive,
+      onLogout: logout,
+      collapsed: collapsed,
+      setCollapsed: setCollapsed,
+      theme: theme,
+      onToggleTheme: toggleTheme
+    }),
+    _IS_NATIVE && /*#__PURE__*/React.createElement(BottomTabBar, {
+      active: active,
+      setActive: setActive
+    }),
+    /*#__PURE__*/React.createElement("main", {
+      style: {
+        marginLeft: sideW,
+        padding: _IS_NATIVE ? '16px 16px 76px' : '24px 22px',
+        minHeight: '100vh',
+        transition: _IS_NATIVE ? 'none' : 'margin-left .2s'
+      }
+    }, Object.entries(screens).map(([id, Comp]) => !mounted[id] ? null : /*#__PURE__*/React.createElement("div", {
+      key: id,
+      style: { display: active === id ? 'block' : 'none' }
+    }, /*#__PURE__*/React.createElement(Comp, {
+      user: user,
+      ...(id === 'settings' ? { onLogout: logout, theme, onToggleTheme: toggleTheme } : {})
+    })))));
 }
 var bootMsg = document.getElementById('boot-msg');
 if (bootMsg) bootMsg.classList.add('hidden');
