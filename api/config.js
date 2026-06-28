@@ -5,5 +5,5 @@ export default function handler(req, res) {
     return res.status(500).json({ error: 'Supabase env vars not configured' });
   }
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ url, key });
+  res.json({ url, key, sentryDsn: process.env.SENTRY_DSN || null });
 }
