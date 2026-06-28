@@ -1068,7 +1068,8 @@ function Transactions({
         alignItems: 'center',
         padding: '11px 14px',
         borderBottom: `1px solid ${T.border}`,
-        gap: 10
+        gap: 10,
+        background: tx.status !== 'paid' ? T.red + '18' : 'transparent'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
