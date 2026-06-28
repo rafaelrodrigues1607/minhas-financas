@@ -75,7 +75,10 @@ let supabase;
 try {
   let _cfg;
   try {
-    _cfg = await fetch(_API_BASE + '/api/config').then(r => { if (!r.ok) throw 0; return r.json(); });
+    const _ac = new AbortController();
+    const _tid = setTimeout(() => _ac.abort(), 5000);
+    _cfg = await fetch(_API_BASE + '/api/config', { signal: _ac.signal })
+      .then(r => { clearTimeout(_tid); if (!r.ok) throw 0; return r.json(); });
     localStorage.setItem('_cfg_cache', JSON.stringify(_cfg));
   } catch (_fe) {
     const _cached = localStorage.getItem('_cfg_cache');
