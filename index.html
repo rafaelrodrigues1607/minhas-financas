@@ -47,7 +47,7 @@ window.addEventListener('error', function(e) {
 });
 </script>
   <script>
-(function() {
+(async function() {
 if (!window.React || !window.ReactDOM) {
   document.getElementById('boot-msg').innerHTML =
     '<div style="padding:24px;color:#f87171;text-align:center"><div style="font-size:28px;margin-bottom:12px">⚠️</div><b>Erro: React não carregou.</b><br><span style="font-size:12px;color:#94a3b8">Verifique sua conexão e recarregue.</span></div>';
@@ -66,7 +66,13 @@ const {
 } = React;
 
 // Supabase client
-const supabase = window.supabase.createClient('https://hasdsnvlhoqoekyfbhkk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhc2RzbnZsaG9xb2VreWZiaGtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzAzNTgsImV4cCI6MjA5Nzg0NjM1OH0.nT_weQjeGhHInwTlPw8W2IXmZUE2yECB71o-pI-RfvM');
+let supabase;
+try {
+  const _cfg = await fetch('/api/config').then(r => { if (!r.ok) throw 0; return r.json(); });
+  supabase = window.supabase.createClient(_cfg.url, _cfg.key);
+} catch (_) {
+  supabase = window.supabase.createClient('https://hasdsnvlhoqoekyfbhkk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhc2RzbnZsaG9xb2VreWZiaGtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzAzNTgsImV4cCI6MjA5Nzg0NjM1OH0.nT_weQjeGhHInwTlPw8W2IXmZUE2yECB71o-pI-RfvM');
+}
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 const fmt = v => new Intl.NumberFormat('pt-BR', {
@@ -606,6 +612,7 @@ function Dashboard({
   const [profile, setProfile] = useState(null);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [_dashRt, _setDashRt] = useState(0);
   useEffect(() => {
     setLoading(true);
     (async () => {
@@ -629,7 +636,13 @@ function Dashboard({
       } else setRecent([]);
       setLoading(false);
     })();
-  }, [user.id, year, month]);
+  }, [user.id, year, month, _dashRt]);
+  useEffect(() => {
+    const ch = supabase.channel('dash-live-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` }, () => _setDashRt(x => x + 1))
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [user.id]);
   const income = bal?.total_income || 0,
     expenses = bal?.total_expenses || 0;
   const investments = bal?.total_investments || 0,
@@ -897,9 +910,17 @@ function Transactions({
     setList(tx || []);
     setLoading(false);
   }, [user.id, year, month, filter]);
+  const _txLoadRef = React.useRef(load);
+  useEffect(() => { _txLoadRef.current = load; }, [load]);
   useEffect(() => {
     load();
   }, [load]);
+  useEffect(() => {
+    const ch = supabase.channel('tx-live-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` }, () => _txLoadRef.current())
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [user.id]);
   const save = async () => {
     if (!form.description) return;
     const payload = {
@@ -1466,6 +1487,12 @@ function Investments({
   useEffect(() => {
     load();
   }, []);
+  useEffect(() => {
+    const ch = supabase.channel('inv-live-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'investments', filter: `user_id=eq.${user.id}` }, () => load())
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [user.id]);
   const save = async () => {
     if (!form.name) return;
     await supabase.from('investments').insert({
@@ -1806,6 +1833,12 @@ function Goals({
   useEffect(() => {
     load();
   }, []);
+  useEffect(() => {
+    const ch = supabase.channel('goals-live-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'financial_goals', filter: `user_id=eq.${user.id}` }, () => load())
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [user.id]);
   const save = async () => {
     if (!form.title) return;
     await supabase.from('financial_goals').insert({
@@ -2216,6 +2249,7 @@ function Reports({
   const [year, setYear] = useState(new Date().getFullYear());
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [_repRt, _setRepRt] = useState(0);
   useEffect(() => {
     setLoading(true);
     supabase.from('monthly_balance').select('*').eq('user_id', user.id).eq('year', year).order('month').then(({
@@ -2224,7 +2258,13 @@ function Reports({
       setData(d || []);
       setLoading(false);
     });
-  }, [user.id, year]);
+  }, [user.id, year, _repRt]);
+  useEffect(() => {
+    const ch = supabase.channel('rep-live-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` }, () => _setRepRt(x => x + 1))
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [user.id]);
   const totalI = data.reduce((a, r) => a + (r.total_income || 0), 0);
   const totalE = data.reduce((a, r) => a + (r.total_expenses || 0), 0);
   const totalInv = data.reduce((a, r) => a + (r.total_investments || 0), 0);
