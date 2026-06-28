@@ -2136,6 +2136,79 @@ function CumulativeChart({ data }) {
   );
 }
 
+// ─── Monthly Bar Chart ────────────────────────────────────────────────────────
+function MonthlyBarChart({ data }) {
+  const canvasRef = React.useRef(null);
+  const chartRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!canvasRef.current || !data.length || !window.Chart) return;
+    if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+    const sorted = [...data].sort((a, b) => a.month - b.month);
+    const labels = sorted.map(r => MONTHS[r.month - 1]);
+    const incomeData = sorted.map(r => r.total_income || 0);
+    const expenseData = sorted.map(r => r.total_expenses || 0);
+    const gridColor = 'rgba(255,255,255,0.06)';
+    chartRef.current = new window.Chart(canvasRef.current, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Receitas',
+            data: incomeData,
+            backgroundColor: T.green + 'cc',
+            borderColor: T.green,
+            borderWidth: 1,
+            borderRadius: 4,
+            borderSkipped: false
+          },
+          {
+            label: 'Despesas',
+            data: expenseData,
+            backgroundColor: T.red + 'cc',
+            borderColor: T.red,
+            borderWidth: 1,
+            borderRadius: 4,
+            borderSkipped: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#94a3b8', font: { size: 12 }, boxWidth: 12, padding: 16 } },
+          tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) } }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            border: { color: gridColor },
+            ticks: { color: '#64748b', font: { size: 11 } }
+          },
+          y: {
+            grid: { color: gridColor },
+            border: { color: gridColor },
+            ticks: {
+              color: '#64748b',
+              font: { size: 11 },
+              callback: v => v >= 1000 ? 'R$' + (v / 1000).toFixed(0) + 'k' : 'R$' + v.toFixed(0)
+            }
+          }
+        }
+      }
+    });
+    return () => { if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; } };
+  }, [data]);
+  if (!data.length) return null;
+  return /*#__PURE__*/React.createElement("div", { style: { ...s.card, padding: '16px 20px' } },
+    /*#__PURE__*/React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 } }, "Receitas vs Despesas por mês"),
+    /*#__PURE__*/React.createElement("div", { style: { height: 240, position: 'relative' } },
+      /*#__PURE__*/React.createElement("canvas", { ref: canvasRef })
+    )
+  );
+}
+
 // ─── Reports ──────────────────────────────────────────────────────────────────
 function Reports({
   user
@@ -2210,7 +2283,7 @@ function Reports({
     value: fmt(totalB),
     icon: "🏦",
     color: totalB >= 0 ? T.green : T.red
-  })), !loading && /*#__PURE__*/React.createElement(CumulativeChart, { data: data }), /*#__PURE__*/React.createElement("div", {
+  })), !loading && /*#__PURE__*/React.createElement(CumulativeChart, { data: data }), !loading && /*#__PURE__*/React.createElement(MonthlyBarChart, { data: data }), /*#__PURE__*/React.createElement("div", {
     style: {
       ...s.card,
       padding: 0,
