@@ -905,7 +905,7 @@ function Transactions({
     const payload = {
       description: form.description,
       amount_planned: parseFloat(form.amount_planned) || 0,
-      amount_actual: form.amount_actual ? parseFloat(form.amount_actual) : null,
+      amount_actual: form.status === 'pending' ? null : (form.amount_actual ? parseFloat(form.amount_actual) : null),
       type: form.type,
       category_id: form.category_id || null,
       payment_method: form.payment_method,
