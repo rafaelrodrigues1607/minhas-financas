@@ -1046,7 +1046,18 @@ function Transactions({
       padding: 28,
       fontSize: 13
     }
-  }, "Nenhuma transação encontrada.") : list.map(tx => {
+  }, "Nenhuma transação encontrada.") : [['income', 'Receitas', T.green], ['expense', 'Despesas', T.red], ['investment', 'Investimentos', T.blue]].map(([gType, gLabel, gColor]) => {
+    const gItems = list.filter(t => t.type === gType);
+    if (!gItems.length) return null;
+    const gTotal = gItems.reduce((a, t) => a + (t.amount_actual || t.amount_planned), 0);
+    return /*#__PURE__*/React.createElement("div", { key: gType },
+      /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', background: gColor + '11', borderBottom: `1px solid ${gColor}33` }
+      },
+        /*#__PURE__*/React.createElement("span", { style: { fontSize: 11, fontWeight: 700, color: gColor, textTransform: 'uppercase', letterSpacing: 1 } }, gLabel),
+        /*#__PURE__*/React.createElement("span", { style: { ...s.mono, fontSize: 12, color: gColor } }, fmt(gTotal))
+      ),
+      gItems.map(tx => {
     const cat = cats.find(c => c.id === tx.category_id);
     return /*#__PURE__*/React.createElement("div", {
       key: tx.id,
@@ -1146,6 +1157,8 @@ function Transactions({
         border: 'none'
       }
     }, "×")));
+      })
+    );
   })), showModal && /*#__PURE__*/React.createElement(Modal, {
     title: editId ? "Editar Transação" : "Nova Transação",
     onClose: () => { setShowModal(false); setEditId(null); setForm(emptyForm); }
