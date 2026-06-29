@@ -1339,6 +1339,16 @@ function Transactions({
       ...form,
       description: e.target.value
     })
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: s.label
+  }, form.type === 'income' ? 'Recebimento' : form.type === 'investment' ? 'Data do investimento' : 'Vencimento'), /*#__PURE__*/React.createElement("input", {
+    style: s.input,
+    type: "date",
+    value: form.transaction_date,
+    onChange: e => setForm({
+      ...form,
+      transaction_date: e.target.value
+    })
   })), /*#__PURE__*/React.createElement("div", {
     className: 'fmg',
     style: {
@@ -1414,17 +1424,7 @@ function Transactions({
     value: "pending"
   }, "Pendente"), /*#__PURE__*/React.createElement("option", {
     value: "paid"
-  }, "Pago")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    style: s.label
-  }, form.type === 'income' ? 'Recebimento' : form.type === 'investment' ? 'Data do investimento' : 'Vencimento'), /*#__PURE__*/React.createElement("input", {
-    style: s.input,
-    type: "date",
-    value: form.transaction_date,
-    onChange: e => setForm({
-      ...form,
-      transaction_date: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "Pago")))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
