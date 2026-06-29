@@ -133,6 +133,12 @@ export default function Reports({ user }) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [_repRt, _setRepRt] = useState(0)
+  const [years, setYears] = useState([new Date().getFullYear()])
+
+  useEffect(() => {
+    supabase.from('monthly_periods').select('year').eq('user_id', user.id).order('year')
+      .then(({ data: ys }) => { if (ys?.length) setYears([...new Set(ys.map(r => r.year))]) })
+  }, [user.id])
 
   useEffect(() => {
     setLoading(true)
@@ -159,7 +165,7 @@ export default function Reports({ user }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text }}>Relatório {year}</h2>
         <select value={year} onChange={e => setYear(+e.target.value)} style={{ ...s.input, width: 85 }}>
-          {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+          {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
 
