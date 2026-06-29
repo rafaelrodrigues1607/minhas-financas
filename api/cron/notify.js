@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
 
-export const config = { runtime: 'nodejs18.x' }
+export const config = { runtime: 'nodejs' }
 
 webpush.setVapidDetails(
   'mailto:rafael.rodrigues1607@gmail.com',
