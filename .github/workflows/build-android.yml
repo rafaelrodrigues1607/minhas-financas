@@ -36,6 +36,15 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Install ImageMagick
+        run: sudo apt-get install -y imagemagick
+
+      - name: Set app icons
+        run: |
+          mkdir -p resources
+          convert icons/icon.png -resize 1024x1024 resources/icon-only.png
+          npx capacitor-assets generate --android
+
       - name: Sync web assets
         run: npx cap sync android
 
