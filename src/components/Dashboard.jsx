@@ -131,7 +131,7 @@ export default function Dashboard({ user }) {
                 <span style={{ fontSize: 13, color: T.text, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</span>
                 <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
                   <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red }}>
-                    {tx.type === 'income' ? '+' : '-'}{fmt(tx.amount_actual)}
+                    {fmt(tx.amount_actual)}
                   </div>
                   <div style={{ fontSize: 10, color: tx.status === 'paid' ? T.green : T.yellow }}>
                     {tx.status === 'paid' ? '✓ pago' : 'pendente'}

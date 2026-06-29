@@ -226,7 +226,7 @@ export default function Transactions({ user }) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red }}>
-                            {tx.type === 'income' ? '+' : '-'}{fmt(tx.amount_actual)}
+                            {fmt(tx.amount_actual)}
                           </div>
                           <div style={{ fontSize: 10, color: tx.status === 'paid' ? T.green : T.yellow }}>
                             {tx.status === 'paid' ? '✓ pago' : 'pendente'}
@@ -365,7 +365,7 @@ export default function Transactions({ user }) {
               <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
                 <div style={{ fontSize: 36, marginBottom: 6 }}>{dc?.icon || '💸'}</div>
                 <div style={{ ...s.mono, fontSize: 24, fontWeight: 700, color: detailTx.type === 'income' ? T.green : detailTx.type === 'investment' ? T.blue : T.red }}>
-                  {detailTx.type === 'income' ? '+' : '-'}{fmt(detailTx.amount_actual)}
+                  {fmt(detailTx.amount_actual)}
                 </div>
                 <div style={{ fontSize: 11, color: detailTx.status === 'paid' ? T.green : T.yellow, marginTop: 4 }}>
                   {detailTx.status === 'paid' ? '✓ Pago' : '⏳ Pendente'}
