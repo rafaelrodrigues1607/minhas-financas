@@ -883,7 +883,7 @@ function Dashboard({
       fontSize: 13,
       color: tx.type === 'income' ? T.green : T.red
     }
-  }, tx.type === 'income' ? '+' : '-', fmt(tx.amount_actual || tx.amount_planned)), /*#__PURE__*/React.createElement("div", {
+  }, tx.type === 'income' ? '+' : '-', fmt(tx.amount_actual)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       color: tx.status === 'paid' ? T.green : T.yellow
@@ -905,7 +905,6 @@ function Transactions({
   const [filter, setFilter] = useState('all');
   const emptyForm = {
     description: '',
-    amount_planned: '',
     amount_actual: '',
     type: 'expense',
     category_id: '',
@@ -974,8 +973,7 @@ function Transactions({
     if (!form.description) return;
     const payload = {
       description: form.description,
-      amount_planned: parseFloat(form.amount_planned) || 0,
-      amount_actual: form.status === 'pending' ? null : (form.amount_actual ? parseFloat(form.amount_actual) : null),
+      amount_actual: parseFloat(form.amount_actual) || 0,
       type: form.type,
       category_id: form.category_id || null,
       payment_method: form.payment_method,
@@ -997,14 +995,13 @@ function Transactions({
   const downloadCSV = () => {
     const PAY = { credit_card: 'Cartão de Crédito', debit_card: 'Cartão de Débito', pix: 'Pix', cash: 'Dinheiro', bank_transfer: 'TED/DOC', other: 'Outro' };
     const TYPE = { income: 'Receita', expense: 'Despesa', investment: 'Investimento' };
-    const headers = ['Data', 'Descrição', 'Tipo', 'Categoria', 'Previsto', 'Realizado', 'Status', 'Pagamento'];
+    const headers = ['Data', 'Descrição', 'Tipo', 'Categoria', 'Valor', 'Status', 'Pagamento'];
     const rows = list.map(tx => [
       tx.transaction_date ? new Date(tx.transaction_date + 'T12:00:00').toLocaleDateString('pt-BR') : '',
       '"' + (tx.description || '').replace(/"/g, '""') + '"',
       TYPE[tx.type] || tx.type,
       cats.find(c => c.id === tx.category_id)?.name || '',
-      (tx.amount_planned || 0).toFixed(2).replace('.', ','),
-      tx.amount_actual != null ? tx.amount_actual.toFixed(2).replace('.', ',') : '',
+      (tx.amount_actual || 0).toFixed(2).replace('.', ','),
       tx.status === 'paid' ? 'Pago' : 'Pendente',
       PAY[tx.payment_method] || tx.payment_method
     ]);
@@ -1018,7 +1015,6 @@ function Transactions({
   const startEdit = tx => {
     setForm({
       description: tx.description || '',
-      amount_planned: tx.amount_planned || '',
       amount_actual: tx.amount_actual || '',
       type: tx.type || 'expense',
       category_id: tx.category_id || '',
@@ -1036,7 +1032,7 @@ function Transactions({
   const markPaid = async tx => {
     await supabase.from('transactions').update({
       status: 'paid',
-      amount_actual: tx.amount_actual || tx.amount_planned
+      amount_actual: tx.amount_actual
     }).eq('id', tx.id);
     load();
   };
@@ -1059,15 +1055,15 @@ function Transactions({
         const day = Math.min(d.getDate(), lastDay);
         newDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       }
-      return { user_id: user.id, period_id: destPeriodId, description: tx.description, amount_planned: tx.amount_planned, amount_actual: null, type: tx.type, category_id: tx.category_id || null, payment_method: tx.payment_method, status: 'pending', transaction_date: newDate, notes: tx.notes || null, card_name: tx.card_name || null };
+      return { user_id: user.id, period_id: destPeriodId, description: tx.description, amount_actual: tx.amount_actual, type: tx.type, category_id: tx.category_id || null, payment_method: tx.payment_method, status: 'pending', transaction_date: newDate, notes: tx.notes || null, card_name: tx.card_name || null };
     });
     await supabase.from('transactions').insert(inserts);
     setCopying(false);
     setShowCopyModal(false);
     load();
   };
-  const income = list.filter(t => t.type === 'income').reduce((a, t) => a + (t.amount_actual || t.amount_planned), 0);
-  const expense = list.filter(t => t.type === 'expense').reduce((a, t) => a + (t.amount_actual || t.amount_planned), 0);
+  const income = list.filter(t => t.type === 'income').reduce((a, t) => a + (t.amount_actual || 0), 0);
+  const expense = list.filter(t => t.type === 'expense').reduce((a, t) => a + (t.amount_actual || 0), 0);
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -1185,7 +1181,7 @@ function Transactions({
   }, "Nenhuma transação encontrada.") : [['income', 'Receitas', T.green], ['expense', 'Despesas', T.red], ['investment', 'Investimentos', T.blue]].map(([gType, gLabel, gColor]) => {
     const gItems = list.filter(t => t.type === gType);
     if (!gItems.length) return null;
-    const gTotal = gItems.reduce((a, t) => a + (t.amount_actual || t.amount_planned), 0);
+    const gTotal = gItems.reduce((a, t) => a + (t.amount_actual || 0), 0);
     return /*#__PURE__*/React.createElement("div", { key: gType },
       /*#__PURE__*/React.createElement("div", {
         style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', background: gColor + '11', borderBottom: `1px solid ${gColor}33` }
@@ -1257,7 +1253,7 @@ function Transactions({
         fontSize: 13,
         color: tx.type === 'income' ? T.green : T.red
       }
-    }, tx.type === 'income' ? '+' : '-', fmt(tx.amount_actual || tx.amount_planned)), /*#__PURE__*/React.createElement("div", {
+    }, tx.type === 'income' ? '+' : '-', fmt(tx.amount_actual)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10,
         color: tx.status === 'paid' ? T.green : T.yellow
@@ -1349,27 +1345,9 @@ function Transactions({
       ...form,
       transaction_date: e.target.value
     })
-  })), /*#__PURE__*/React.createElement("div", {
-    className: 'fmg',
-    style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    style: s.label
-  }, "Previsto (R$)"), /*#__PURE__*/React.createElement("input", {
-    style: s.input,
-    type: "number",
-    placeholder: "0.00",
-    value: form.amount_planned,
-    onChange: e => setForm({
-      ...form,
-      amount_planned: e.target.value
-    })
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     style: s.label
-  }, "Realizado (R$)"), /*#__PURE__*/React.createElement("input", {
+  }, "Valor (R$)"), /*#__PURE__*/React.createElement("input", {
     style: s.input,
     type: "number",
     placeholder: "0.00",
@@ -1378,7 +1356,7 @@ function Transactions({
       ...form,
       amount_actual: e.target.value
     })
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     style: s.label
   }, "Categoria"), /*#__PURE__*/React.createElement("select", {
     style: s.input,
@@ -1508,14 +1486,13 @@ function Transactions({
       /*#__PURE__*/React.createElement("div", { style: { textAlign: 'center', padding: '8px 0 16px' } },
         /*#__PURE__*/React.createElement("div", { style: { fontSize: 36, marginBottom: 6 } }, dc?.icon || '💸'),
         /*#__PURE__*/React.createElement("div", { style: { ...s.mono, fontSize: 24, fontWeight: 700, color: detailTx.type === 'income' ? T.green : detailTx.type === 'investment' ? T.blue : T.red } },
-          detailTx.type === 'income' ? '+' : '-', fmt(detailTx.amount_actual || detailTx.amount_planned)),
+          detailTx.type === 'income' ? '+' : '-', fmt(detailTx.amount_actual)),
         /*#__PURE__*/React.createElement("div", { style: { fontSize: 11, color: detailTx.status === 'paid' ? T.green : T.yellow, marginTop: 4 } },
           detailTx.status === 'paid' ? '✓ Pago' : '⏳ Pendente')
       ),
       row('Tipo', TYPE[detailTx.type]),
       row('Categoria', dc ? `${dc.icon} ${dc.name}` : '—'),
-      row('Valor previsto', fmt(detailTx.amount_planned)),
-      row('Valor realizado', detailTx.amount_actual != null ? fmt(detailTx.amount_actual) : '—'),
+      row('Valor', fmt(detailTx.amount_actual)),
       row('Pagamento', PAY[detailTx.payment_method] || detailTx.payment_method),
       detailTx.card_name ? row('Cartão', detailTx.card_name) : null,
       row(detailTx.type === 'income' ? 'Recebimento' : detailTx.type === 'investment' ? 'Data do investimento' : 'Vencimento', detailTx.transaction_date ? new Date(detailTx.transaction_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'),
