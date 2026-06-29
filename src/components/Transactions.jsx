@@ -223,25 +223,19 @@ export default function Transactions({ user }) {
                 {gItems.map(tx => {
                   const cat = cats.find(c => c.id === tx.category_id)
                   return (
-                    <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 14px', borderBottom: `1px solid ${T.border}`, gap: 10, background: tx.status !== 'paid' ? T.red + '18' : 'transparent' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                        <span style={{ fontSize: 18, flexShrink: 0 }}>{cat?.icon || '💸'}</span>
-                        <div style={{ minWidth: 0 }}>
-                          <div onClick={() => setDetailTx(tx)} style={{ fontSize: 13, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: T.border }}>
-                            {tx.description}
-                          </div>
-                          <div style={{ fontSize: 11, color: T.muted }}>{cat?.name || tx.type} · {tx.payment_method}</div>
+                    <div key={tx.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: `1px solid ${T.border}`, gap: 10, background: tx.status !== 'paid' ? T.red + '18' : 'transparent' }}>
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>{cat?.icon || '💸'}</span>
+                      <div style={{ minWidth: 0, overflow: 'hidden', flexShrink: 1 }}>
+                        <div onClick={() => setDetailTx(tx)} style={{ fontSize: 13, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: T.border }}>
+                          {tx.description}
                         </div>
+                        <div style={{ fontSize: 11, color: T.muted }}>{cat?.name || tx.type} · {tx.payment_method}</div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red }}>
-                            {fmt(tx.amount_actual)}
-                          </div>
-                          <div style={{ fontSize: 10, color: tx.status === 'paid' ? T.green : T.yellow }}>
-                            {tx.status === 'paid' ? '✓ pago' : 'pendente'}
-                          </div>
-                        </div>
+                      <div style={{ flexShrink: 0 }}>
+                        <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red }}>{fmt(tx.amount_actual)}</div>
+                        <div style={{ fontSize: 10, color: tx.status === 'paid' ? T.green : T.yellow }}>{tx.status === 'paid' ? '✓ pago' : 'pendente'}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', flexShrink: 0 }}>
                         {tx.status !== 'paid' && (
                           <button onClick={() => markPaid(tx)} style={{ background: T.green + '22', color: T.green, padding: '4px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', border: 'none' }}>✓</button>
                         )}
