@@ -201,7 +201,17 @@ export default function Transactions({ user }) {
           <p style={{ color: T.muted, textAlign: 'center', padding: 28, fontSize: 13 }}>Nenhuma transação encontrada.</p>
         ) : (
           [['income', 'Receitas', T.green], ['expense', 'Despesas', T.red], ['investment', 'Investimentos', T.blue]].map(([gType, gLabel, gColor]) => {
-            const gItems = list.filter(t => t.type === gType)
+            const rawItems = list.filter(t => t.type === gType)
+            const gItems = gType === 'expense'
+              ? [...rawItems].sort((a, b) => {
+                  const aCC = a.payment_method === 'credit_card' ? 0 : 1
+                  const bCC = b.payment_method === 'credit_card' ? 0 : 1
+                  if (aCC !== bCC) return aCC - bCC
+                  const aCat = cats.find(c => c.id === a.category_id)?.name || ''
+                  const bCat = cats.find(c => c.id === b.category_id)?.name || ''
+                  return aCat.localeCompare(bCat, 'pt-BR')
+                })
+              : rawItems
             if (!gItems.length) return null
             const gTotal = gItems.reduce((a, t) => a + (t.amount_actual || 0), 0)
             return (
