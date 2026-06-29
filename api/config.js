@@ -9,5 +9,5 @@ export default function handler(req, res) {
     return res.status(500).json({ error: 'Supabase env vars not configured' });
   }
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ url, key, sentryDsn: process.env.SENTRY_DSN || null });
+  res.json({ url, key, sentryDsn: process.env.SENTRY_DSN || null, vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '' });
 }

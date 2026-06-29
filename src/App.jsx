@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { supabase, IS_NATIVE } from './lib/supabase.js'
+import { supabase, IS_NATIVE, registerPush, getVapidPublicKey } from './lib/supabase.js'
 import { T, applyTheme, makeS } from './lib/theme.js'
 import AuthScreen from './components/AuthScreen.jsx'
 import Sidebar from './components/Sidebar.jsx'
@@ -55,6 +55,18 @@ export default function App() {
   }, [])
 
   useEffect(() => { setMounted(m => ({ ...m, [active]: true })) }, [active])
+
+  // Auto-register Web Push when user logs in (if notifications enabled and VAPID key available)
+  useEffect(() => {
+    if (!user || IS_NATIVE) return
+    const vapidKey = getVapidPublicKey()
+    if (!vapidKey) return
+    supabase.from('notification_settings').select('enabled').eq('user_id', user.id).single().then(({ data }) => {
+      if (data?.enabled !== false) {
+        registerPush(vapidKey).catch(() => {})
+      }
+    }).catch(() => {})
+  }, [user])
 
   const logout = async () => {
     await supabase.auth.signOut()
