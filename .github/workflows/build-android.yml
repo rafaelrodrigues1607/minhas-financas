@@ -41,13 +41,9 @@ jobs:
 
       - name: Set app icons
         run: |
-          for entry in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
-            density="${entry%%:*}"
-            size="${entry##*:}"
-            dir="android/app/src/main/res/mipmap-${density}"
-            convert icons/icon.png -resize "${size}x${size}" "${dir}/ic_launcher.png"
-            convert icons/icon.png -resize "${size}x${size}" -gravity center -background "#3ecf8e" -extent "${size}x${size}" "${dir}/ic_launcher_round.png"
-          done
+          mkdir -p resources
+          convert icons/icon.png -resize 1024x1024 resources/icon-only.png
+          npx capacitor-assets generate --android
 
       - name: Sync web assets
         run: npx cap sync android

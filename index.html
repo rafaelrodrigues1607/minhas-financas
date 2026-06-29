@@ -1416,7 +1416,7 @@ function Transactions({
     value: "paid"
   }, "Pago")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     style: s.label
-  }, "Data"), /*#__PURE__*/React.createElement("input", {
+  }, form.type === 'income' ? 'Recebimento' : form.type === 'investment' ? 'Data do investimento' : 'Vencimento'), /*#__PURE__*/React.createElement("input", {
     style: s.input,
     type: "date",
     value: form.transaction_date,
@@ -1518,7 +1518,7 @@ function Transactions({
       row('Valor realizado', detailTx.amount_actual != null ? fmt(detailTx.amount_actual) : '—'),
       row('Pagamento', PAY[detailTx.payment_method] || detailTx.payment_method),
       detailTx.card_name ? row('Cartão', detailTx.card_name) : null,
-      row('Data', detailTx.transaction_date ? new Date(detailTx.transaction_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'),
+      row(detailTx.type === 'income' ? 'Recebimento' : detailTx.type === 'investment' ? 'Data do investimento' : 'Vencimento', detailTx.transaction_date ? new Date(detailTx.transaction_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'),
       row('Criado em', new Date(detailTx.created_at).toLocaleString('pt-BR')),
       detailTx.notes ? row('Notas', detailTx.notes) : null,
       /*#__PURE__*/React.createElement("div", { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 } },
