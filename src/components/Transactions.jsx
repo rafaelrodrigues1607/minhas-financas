@@ -18,7 +18,9 @@ export default function Transactions({ user }) {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [filter, setFilter] = useState('all')
-  const emptyForm = { description: '', amount_actual: '', type: 'expense', category_id: '', payment_method: 'credit_card', status: 'pending', transaction_date: '' }
+  const SALARY_CATS = ['Salário', 'Salário 13º', 'PLR']
+  const EMPLOYERS = ['Poliedro', 'CTIS TECNOLOGIA S.A.', 'SQUADRA TECNOLOGIA S/A']
+  const emptyForm = { description: '', amount_actual: '', type: 'expense', category_id: '', payment_method: 'credit_card', status: 'pending', transaction_date: '', empregador: '' }
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [detailTx, setDetailTx] = useState(null)
@@ -77,7 +79,8 @@ export default function Transactions({ user }) {
       category_id: form.category_id || null,
       payment_method: form.payment_method,
       status: form.status,
-      transaction_date: form.transaction_date || null
+      transaction_date: form.transaction_date || null,
+      empregador: form.empregador || null
     }
     if (editId) {
       await supabase.from('transactions').update(payload).eq('id', editId)
@@ -119,7 +122,8 @@ export default function Transactions({ user }) {
       category_id: tx.category_id || '',
       payment_method: tx.payment_method || 'credit_card',
       status: tx.status || 'pending',
-      transaction_date: tx.transaction_date || ''
+      transaction_date: tx.transaction_date || '',
+      empregador: tx.empregador || ''
     })
     setEditId(tx.id)
     setShowModal(true)
@@ -235,7 +239,7 @@ export default function Transactions({ user }) {
                         <div onClick={() => setDetailTx(tx)} style={{ fontSize: 13, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: T.border }}>
                           {tx.description}
                         </div>
-                        <div style={{ fontSize: 11, color: T.muted }}>{cat?.name || tx.type} · {tx.payment_method}</div>
+                        <div style={{ fontSize: 11, color: T.muted }}>{cat?.name || tx.type}{tx.empregador ? ` · ${tx.empregador}` : ''} · {tx.payment_method}</div>
                       </div>
                       <div style={{ flexShrink: 0 }}>
                         <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red }}>{fmt(tx.amount_actual)}</div>
@@ -287,6 +291,15 @@ export default function Transactions({ user }) {
                 {cats.filter(c => c.type === form.type).map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
+            {SALARY_CATS.includes(cats.find(c => c.id === form.category_id)?.name) && (
+              <div>
+                <label style={s.label}>Empregador</label>
+                <select style={s.input} value={form.empregador} onChange={e => setForm({ ...form, empregador: e.target.value })}>
+                  <option value="">Selecionar...</option>
+                  {EMPLOYERS.map(e => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+            )}
             <div className="fmg" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
                 <label style={s.label}>Pagamento</label>
@@ -383,6 +396,7 @@ export default function Transactions({ user }) {
               </div>
               {row('Tipo', TYPE[detailTx.type])}
               {row('Categoria', dc ? `${dc.icon} ${dc.name}` : '—')}
+              {detailTx.empregador ? row('Empregador', detailTx.empregador) : null}
               {row('Valor', fmt(detailTx.amount_actual))}
               {row('Pagamento', PAY[detailTx.payment_method] || detailTx.payment_method)}
               {detailTx.card_name ? row('Cartão', detailTx.card_name) : null}
