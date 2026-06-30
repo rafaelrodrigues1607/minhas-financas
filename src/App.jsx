@@ -164,14 +164,16 @@ export default function App() {
         minHeight: '100vh',
         transition: IS_NATIVE ? 'none' : 'margin-left .2s'
       }}>
-        {Object.entries(screens).map(([id, Comp]) => !mounted[id] ? null : (
-          <div key={id} style={{ display: active === id ? 'block' : 'none' }}>
-            <Comp
-              user={user}
-              {...(id === 'settings' ? { onLogout: logout, theme, onToggleTheme: toggleTheme } : {})}
-            />
-          </div>
-        ))}
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          {Object.entries(screens).map(([id, Comp]) => !mounted[id] ? null : (
+            <div key={id} style={{ display: active === id ? 'block' : 'none' }}>
+              <Comp
+                user={user}
+                {...(id === 'settings' ? { onLogout: logout, theme, onToggleTheme: toggleTheme } : {})}
+              />
+            </div>
+          ))}
+        </div>
       </main>
     </div>
   )
