@@ -26,6 +26,12 @@ export default function Transactions({ user }) {
   const [copyForm, setCopyForm] = useState({ srcMonth: month === 1 ? 12 : month - 1, srcYear: month === 1 ? year - 1 : year, types: ['income', 'expense', 'investment'] })
   const [copying, setCopying] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [years, setYears] = useState([now.getFullYear()])
+
+  useEffect(() => {
+    supabase.from('monthly_periods').select('year').eq('user_id', user.id).order('year')
+      .then(({ data: ys }) => { if (ys?.length) setYears([...new Set(ys.map(r => r.year))]) })
+  }, [user.id])
 
   const getOrCreatePeriod = async () => {
     let { data: p } = await supabase.from('monthly_periods').select('id').eq('user_id', user.id).eq('year', year).eq('month', month).single()
@@ -168,7 +174,7 @@ export default function Transactions({ user }) {
             {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
           <select value={year} onChange={e => setYear(+e.target.value)} style={{ ...s.input, width: 85 }}>
-            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
           <button onClick={() => setShowModal(true)} style={s.btnP}>+ Lançar</button>
           <button onClick={() => setShowCopyModal(true)} style={s.btnS}>📋 Copiar mês</button>
@@ -314,7 +320,7 @@ export default function Transactions({ user }) {
                   {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
                 </select>
                 <select style={s.input} value={copyForm.srcYear} onChange={e => setCopyForm({ ...copyForm, srcYear: +e.target.value })}>
-                  {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
             </div>

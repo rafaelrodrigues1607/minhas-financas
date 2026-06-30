@@ -35,6 +35,12 @@ export default function Dashboard({ user }) {
   const [recent, setRecent] = useState([])
   const [loading, setLoading] = useState(true)
   const [_dashRt, _setDashRt] = useState(0)
+  const [years, setYears] = useState([now.getFullYear()])
+
+  useEffect(() => {
+    supabase.from('monthly_periods').select('year').eq('user_id', user.id).order('year')
+      .then(({ data: ys }) => { if (ys?.length) setYears([...new Set(ys.map(r => r.year))]) })
+  }, [user.id])
 
   useEffect(() => {
     setLoading(true);
@@ -82,7 +88,7 @@ export default function Dashboard({ user }) {
             {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
           <select value={year} onChange={e => setYear(+e.target.value)} style={{ ...s.input, width: 85 }}>
-            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
       </div>
