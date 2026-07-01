@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '../lib/supabase.js'
+import { supabase, IS_NATIVE } from '../lib/supabase.js'
 import { T, makeS } from '../lib/theme.js'
-import { fmt, MONTHS, MONTH_NAMES, TYPE, PAY } from '../lib/format.js'
+import { fmt, fmtDM, MONTHS, MONTH_NAMES, TYPE, PAY } from '../lib/format.js'
 import Modal from './Modal.jsx'
 
 function Loader() {
@@ -234,20 +234,43 @@ export default function Transactions({ user }) {
                 </div>
                 {gItems.map(tx => {
                   const cat = cats.find(c => c.id === tx.category_id)
+                  if (IS_NATIVE) {
+                    return (
+                      <div key={tx.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: `1px solid ${T.border}`, gap: 10, background: tx.status !== 'paid' ? T.red + '18' : 'transparent' }}>
+                        <span style={{ fontSize: 18, flexShrink: 0 }}>{cat?.icon || '💸'}</span>
+                        <div style={{ minWidth: 0, overflow: 'hidden', flexShrink: 1 }}>
+                          <div onClick={() => setDetailTx(tx)} style={{ fontSize: 13, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: T.border }}>
+                            {tx.description}
+                          </div>
+                          <div style={{ fontSize: 11, color: T.muted }}>{cat?.name || tx.type}{tx.empregador ? ` · ${tx.empregador}` : ''} · {tx.payment_method}</div>
+                        </div>
+                        <div style={{ flexShrink: 0 }}>
+                          <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red }}>{fmt(tx.amount_actual)}</div>
+                          <div style={{ fontSize: 10, color: tx.status === 'paid' ? T.green : T.yellow }}>{tx.status === 'paid' ? '✓ pago' : 'pendente'}</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', flexShrink: 0 }}>
+                          {tx.status !== 'paid' && (
+                            <button onClick={() => markPaid(tx)} style={{ background: T.green + '22', color: T.green, padding: '4px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', border: 'none' }}>✓</button>
+                          )}
+                          <button onClick={() => startEdit(tx)} title="Editar" style={{ color: T.muted2, fontSize: 15, cursor: 'pointer', background: 'none', border: 'none', padding: '0 2px' }}>✏</button>
+                          <button onClick={() => setConfirmDeleteId(tx.id)} style={{ color: T.red, fontSize: 18, cursor: 'pointer', background: 'none', border: 'none' }}>×</button>
+                        </div>
+                      </div>
+                    )
+                  }
                   return (
-                    <div key={tx.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: `1px solid ${T.border}`, gap: 10, background: tx.status !== 'paid' ? T.red + '18' : 'transparent' }}>
-                      <span style={{ fontSize: 18, flexShrink: 0 }}>{cat?.icon || '💸'}</span>
-                      <div style={{ minWidth: 0, overflow: 'hidden', flexShrink: 1 }}>
+                    <div key={tx.id} style={{ display: 'grid', gridTemplateColumns: '22px 1fr 44px 100px 76px auto', alignItems: 'center', padding: '11px 14px', borderBottom: `1px solid ${T.border}`, gap: 10, background: tx.status !== 'paid' ? T.red + '18' : 'transparent' }}>
+                      <span style={{ fontSize: 18 }}>{cat?.icon || '💸'}</span>
+                      <div style={{ minWidth: 0, overflow: 'hidden' }}>
                         <div onClick={() => setDetailTx(tx)} style={{ fontSize: 13, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', textDecoration: 'underline', textDecorationColor: T.border }}>
                           {tx.description}
                         </div>
-                        <div style={{ fontSize: 11, color: T.muted }}>{cat?.name || tx.type}{tx.empregador ? ` · ${tx.empregador}` : ''} · {tx.payment_method}</div>
+                        <div style={{ fontSize: 11, color: T.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat?.name || tx.type}{tx.empregador ? ` · ${tx.empregador}` : ''} · {tx.payment_method}</div>
                       </div>
-                      <div style={{ flexShrink: 0 }}>
-                        <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red }}>{fmt(tx.amount_actual)}</div>
-                        <div style={{ fontSize: 10, color: tx.status === 'paid' ? T.green : T.yellow }}>{tx.status === 'paid' ? '✓ pago' : 'pendente'}</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', flexShrink: 0 }}>
+                      <div style={{ fontSize: 12, color: T.muted, textAlign: 'right' }}>{fmtDM(tx.transaction_date)}</div>
+                      <div style={{ ...s.mono, fontSize: 13, color: tx.type === 'income' ? T.green : T.red, textAlign: 'right' }}>{fmt(tx.amount_actual)}</div>
+                      <div style={{ fontSize: 11, textAlign: 'center', color: tx.status === 'paid' ? T.green : T.yellow }}>{tx.status === 'paid' ? '✓ Pago' : 'Pendente'}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                         {tx.status !== 'paid' && (
                           <button onClick={() => markPaid(tx)} style={{ background: T.green + '22', color: T.green, padding: '4px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', border: 'none' }}>✓</button>
                         )}
