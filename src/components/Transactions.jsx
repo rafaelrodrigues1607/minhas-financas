@@ -168,6 +168,8 @@ export default function Transactions({ user }) {
 
   const income = list.filter(t => t.type === 'income').reduce((a, t) => a + (t.amount_actual || 0), 0)
   const expense = list.filter(t => t.type === 'expense').reduce((a, t) => a + (t.amount_actual || 0), 0)
+  const investments = list.filter(t => t.type === 'investment').reduce((a, t) => a + (t.amount_actual || 0), 0)
+  const balance = income - expense - investments
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -187,7 +189,7 @@ export default function Transactions({ user }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
-        {[['RECEITAS', income, T.green], ['DESPESAS', expense, T.red], ['SALDO', income - expense, income - expense >= 0 ? T.green : T.red]].map(([l, v, c]) => (
+        {[['RECEITAS', income, T.green], ['DESPESAS', expense, T.red], ['SALDO', balance, balance >= 0 ? T.green : T.red]].map(([l, v, c]) => (
           <div key={l} className="txsc" style={{ ...s.card, textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: T.muted, marginBottom: 4 }}>{l}</div>
             <div className="txsv" style={{ ...s.mono, color: c, fontSize: 16, fontWeight: 700 }}>{fmt(v)}</div>
